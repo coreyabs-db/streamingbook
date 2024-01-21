@@ -47,48 +47,48 @@ import org.joda.time.Instant;
 /**
  * Standalone executable version of Example 2-1. Can be run locally over small test data from the root repo dir via:
  *
- *   mvn compile exec:java -Dexec.mainClass=net.streamingbook.Example2_1 -Dexec.args="--inputFile=src/main/java/net/streamingbook/inputs.txt --output=output" -Pdirect-runner
+ *   mvn compile exec:java -Dexec.mainClass=net.streamingbook.Example2_1 -Dexec.args="--inputFile=src/main/java/net/streamingbook/inputs.csv --output=output" -Pdirect-runner
  *   cat output-*
  *
  * which will create and then dump one or more files in the root repo named "output-NNNNN-of-MMMMMM".
  */
 public class Example2_1 {
-    static class ParseFn extends DoFn<String, KV<String, Integer>> {
-	@ProcessElement
-	public void processElement(@Element String input, OutputReceiver<KV<String, Integer>> output) {
-	    String[] parts = input.split(",");
-	    String team = parts[1].trim();
-	    Integer score = Integer.parseInt(parts[2].trim());
-	    Instant eventTime = Instant.parse(parts[3].trim());
-	    output.outputWithTimestamp(KV.of(team, score), eventTime);
+	static class ParseFn extends DoFn<String, KV<String, Integer>> {
+		@ProcessElement
+		public void processElement(@Element String input, OutputReceiver<KV<String, Integer>> output) {
+			String[] parts = input.split(",");
+			String team = parts[1].trim();
+			Integer score = Integer.parseInt(parts[2].trim());
+			Instant eventTime = Instant.parse(parts[3].trim());
+			output.outputWithTimestamp(KV.of(team, score), eventTime);
+		}
 	}
-    }
 
-    public interface Options extends PipelineOptions {
-	@Description("Path of the file to read from")
-	@Default.String("src/main/java/net/streamingbook/inputs.txt")
-	String getInputFile();
-	void setInputFile(String value);
+	public interface Options extends PipelineOptions {
+		@Description("Path of the file to read from")
+		@Default.String("src/main/java/net/streamingbook/inputs.txt")
+		String getInputFile();
+		void setInputFile(String value);
 
-	@Description("Path of the file to write to")
-	@Required
-	String getOutput();
-	void setOutput(String value);
-    }
+		@Description("Path of the file to write to")
+		@Required
+		String getOutput();
+		void setOutput(String value);
+	}
 
-    public static void main(String[] args) {
-	Options options = PipelineOptionsFactory
-	    .fromArgs(args)
-	    .withValidation()
-	    .as(Options.class);
-	Pipeline pipeline = Pipeline.create(options);
+	public static void main(String[] args) {
+		Options options = PipelineOptionsFactory
+				.fromArgs(args)
+				.withValidation()
+				.as(Options.class);
+		Pipeline pipeline = Pipeline.create(options);
 
-	pipeline
-	    .apply("Read", TextIO.read().from(options.getInputFile()))
-	    .apply("Parse", ParDo.of(new ParseFn()))
-	    .apply("Example 2-1", new BeamModel.Example2_1())
-	    .apply("Write", TextIO.write().to(options.getOutput()));
+		pipeline
+				.apply("Read", TextIO.read().from(options.getInputFile()))
+				.apply("Parse", ParDo.of(new ParseFn()))
+				.apply("Example 2-1", new BeamModel.Example2_1())
+				.apply("Write", TextIO.write().to(options.getOutput()));
 
-	pipeline.run().waitUntilFinish();
-    }
+		pipeline.run().waitUntilFinish();
+	}
 }
